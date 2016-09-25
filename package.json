@@ -1,0 +1,39 @@
+{
+  "name": "simple-physics",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "babel-loader": "^6.2.5",
+    "gl-buffer": "^2.1.2",
+    "gl-fbo": "^2.0.5",
+    "gl-mat4": "^1.1.4",
+    "gl-shader": "^4.2.0",
+    "gl-texture2d": "^2.0.11",
+    "gl-vao": "^1.3.0",
+    "gl-vec2": "^1.0.0",
+    "glsl-noise": "0.0.0",
+    "glslify-loader": "^1.0.2",
+    "node-captions": "^0.4.6",
+    "plyr": "^2.0.7",
+    "raw-loader": "^0.5.1",
+    "react": "^15.3.1",
+    "react-dom": "^15.3.1",
+    "simplex-noise": "^2.2.0",
+    "srt2vtt": "^1.3.1",
+    "tween": "^0.9.0",
+    "webpack-dev-server": "^1.16.1"
+  },
+  "devDependencies": {
+    "babel-cli": "^6.14.0",
+    "babel-loader": "^6.2.5",
+    "babel-preset-es2015": "^6.14.0",
+    "babel-preset-react": "^6.11.1",
+    "electron-prebuilt": "^1.3.4"
+  }
+}
