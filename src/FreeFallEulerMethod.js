@@ -1,14 +1,8 @@
 //http://www.gotoandplay.it/_articles/2005/08/advCharPhysics.php
 
-// * understand for formular
-// * how to apply force for initiate direction
-// * how to apply constraints and dampping effect on constraints
-// * implement rigid body things
-// * implement soft body things
-
 import React, { Component } from 'react';
 
-class FreeFallEulerMethod extends Component {
+class FreeFallVerletIntergration extends Component {
 
   componentDidMount() {
     const { canvas } = this.refs;
@@ -26,7 +20,7 @@ class FreeFallEulerMethod extends Component {
 
     this.testSet = {
       pos: [canvas.width / 2, 0],
-      oldPos: [canvas.width / 2, 0],
+      vel: [1, 0],
       acc: [0, 10],
       pt: -1,
       ball: {
@@ -41,15 +35,31 @@ class FreeFallEulerMethod extends Component {
   }
 
   update(dt) {
-    const { pos, oldPos, wind, vel, acc, ball } = this.testSet;
+    const { pos, wind, vel, acc, ball } = this.testSet;
     const { canvas } = this.refs;
     const { width, height, clientLeft, clientTop } = canvas;
 
     dt /= 100;
 
-    const newPos = [];
-    newPos[0] = 2 * pos[0] - oldPos[0] + acc[0] * dt * dt;
-    newPos[1] = 2 * pos[1] - oldPos[1] + acc[1] * dt * dt;
+    // Euler method : https://ko.wikipedia.org/wiki/%EC%98%A4%EC%9D%BC%EB%9F%AC_%EB%B0%A9%EB%B2%95
+    // Taylor series : https://ko.wikipedia.org/wiki/%ED%85%8C%EC%9D%BC%EB%9F%AC_%EA%B8%89%EC%88%98
+
+    // a : acceleration
+    // v₁ : previous-velocity
+    // v₂ : current-velocity
+    // d₁ : previous-distance
+    // d₂ : current-distance
+    // dt : delta-time, time between previous-velocity and current-velocity
+
+    // a = (v₁ - v₂) / dt
+    // v₂ = a * dt + v₁
+    // d₂ = d₁ + v₂ * dt
+
+    vel[0] += acc[0] * dt;
+    vel[1] += acc[1] * dt;
+
+    pos[0] += vel[0] * dt;
+    pos[1] += vel[1] * dt;
 
     //check bound
     const ballRadius = ball.radius + ball.lineWidth;
@@ -59,35 +69,18 @@ class FreeFallEulerMethod extends Component {
       top: clientTop + ballRadius,
       bottom: clientTop + height - ballRadius,
     }
-
-    const xPosGap = newPos[0] - pos[0];
-    const yPosGap = newPos[1] - pos[1];
-
-    if (Math.abs(yPosGap) < 1. && Math.abs(newPos[1] - bounds.bottom) < 2.) {
-      pos[1] = oldPos[1] = bounds.bottom;
+    if (pos[1] >= bounds.bottom) {
+      pos[1] = bounds.bottom;
+      vel[1] *= -0.7;
     }
-    else if (newPos[1] >= bounds.bottom) {
-      pos[1] = bounds.bottom - (newPos[1] - bounds.bottom ) * 0.7;
-      oldPos[1] = pos[1] + yPosGap * 0.7;
+    if (pos[0] >= bounds.right) {
+      pos[0] = bounds.right;
+      vel[0] *= -0.7;
     }
-    else {
-      oldPos[1] = pos[1];
-      pos[1] = newPos[1];
+    if (pos[0] <= bounds.left) {
+      pos[0] = bounds.left;
+      vel[0] *= -0.7;
     }
-
-    if (newPos[0] >= bounds.right) {
-      pos[0] = bounds.right - (newPos[0] - bounds.right ) * 0.7;
-      oldPos[0] = pos[0] + xPosGap * 0.7;
-    }
-    else if (newPos[0] <= bounds.left) {
-      pos[0] = bounds.left - (newPos[0] - bounds.left ) * 0.7;
-      oldPos[0] = pos[0] + xPosGap * 0.7;
-    }
-    else {
-      oldPos[0] = pos[0];
-      pos[0] = newPos[0];
-    }
-
   }
 
   renderToCanvas(time) {
@@ -123,4 +116,4 @@ class FreeFallEulerMethod extends Component {
   }
 }
 
-export default FreeFallEulerMethod;
+export default FreeFallVerletIntergration;

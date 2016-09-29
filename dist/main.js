@@ -21355,9 +21355,9 @@
 
 	var _react2 = _interopRequireDefault(_react);
 
-	var _FreeFallEulerMethod = __webpack_require__(174);
+	var _ClothSimulationVerletIntergration = __webpack_require__(173);
 
-	var _FreeFallEulerMethod2 = _interopRequireDefault(_FreeFallEulerMethod);
+	var _ClothSimulationVerletIntergration2 = _interopRequireDefault(_ClothSimulationVerletIntergration);
 
 	function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
@@ -21382,7 +21382,7 @@
 	      return _react2.default.createElement(
 	        'div',
 	        null,
-	        _react2.default.createElement(_FreeFallEulerMethod2.default, null)
+	        _react2.default.createElement(_ClothSimulationVerletIntergration2.default, null)
 	      );
 	    }
 	  }]);
@@ -21393,8 +21393,7 @@
 	exports.default = App;
 
 /***/ },
-/* 173 */,
-/* 174 */
+/* 173 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
@@ -21423,16 +21422,21 @@
 	// * implement rigid body things
 	// * implement soft body things
 
-	var FreeFallEulerMethod = function (_Component) {
-	  _inherits(FreeFallEulerMethod, _Component);
+	// * friction?
 
-	  function FreeFallEulerMethod() {
-	    _classCallCheck(this, FreeFallEulerMethod);
+	// http://www.futuredatalab.com/blobfamily/
+	// http://cowboyprogramming.com/2007/01/05/blob-physics/
 
-	    return _possibleConstructorReturn(this, (FreeFallEulerMethod.__proto__ || Object.getPrototypeOf(FreeFallEulerMethod)).apply(this, arguments));
+	var ClothSimulationVerletIntergration = function (_Component) {
+	  _inherits(ClothSimulationVerletIntergration, _Component);
+
+	  function ClothSimulationVerletIntergration() {
+	    _classCallCheck(this, ClothSimulationVerletIntergration);
+
+	    return _possibleConstructorReturn(this, (ClothSimulationVerletIntergration.__proto__ || Object.getPrototypeOf(ClothSimulationVerletIntergration)).apply(this, arguments));
 	  }
 
-	  _createClass(FreeFallEulerMethod, [{
+	  _createClass(ClothSimulationVerletIntergration, [{
 	    key: 'componentDidMount',
 	    value: function componentDidMount() {
 	      var _this2 = this;
@@ -21441,26 +21445,120 @@
 
 	      var ctx = canvas.getContext('2d');
 
-	      canvas.width = window.innerWidth / 2;
-	      canvas.height = window.innerHeight / 2;
+	      canvas.width = window.innerWidth * 0.92;
+	      canvas.height = window.innerHeight * 0.92;
 	      window.addEventListener('resize', function () {
-	        canvas.width = window.innerWidth / 2;
-	        canvas.height = window.innerHeight / 2;
+	        canvas.width = window.innerWidth * 0.92;
+	        canvas.height = window.innerHeight * 0.92;
 	      });
+
 	      this.canvas = canvas;
 
 	      this.ctx = ctx;
 
+	      var starMeta = this.genStarMeta();
+	      var clothMeta = this.genClothMeta();
+
 	      this.testSet = {
-	        pos: [canvas.width / 2, 0],
-	        oldPos: [canvas.width / 2, 0],
-	        acc: [0, 10],
-	        pt: -1,
-	        ball: {
-	          radius: 16,
-	          lineWidth: 2
-	        }
+	        gravity: {
+	          x: 0,
+	          y: 10
+	        },
+	        body: {
+	          points: clothMeta.points,
+	          constraints: clothMeta.constraints
+	        },
+	        pt: -1
 	      };
+
+	      var selected = false;
+	      canvas.onmousedown = function (e) {
+	        var rect = canvas.getBoundingClientRect();
+	        var mx = e.clientX - rect.left;
+	        var my = e.clientY - rect.top;
+
+	        var _testSet = _this2.testSet;
+	        var gravity = _testSet.gravity;
+	        var body = _testSet.body;
+	        var points = body.points;
+
+
+	        points.forEach(function (_ref, i) {
+	          var currPos = _ref.currPos;
+	          var prevPos = _ref.prevPos;
+	          var radius = _ref.radius;
+	          var lineWidth = _ref.lineWidth;
+	          var pin = _ref.pin;
+
+	          var px = currPos.x + rect.left;
+	          var py = currPos.y + rect.top;
+
+	          var dx = Math.abs(mx - px);
+	          var dy = Math.abs(my - py);
+
+	          if (!pin && (radius + lineWidth) * 2 > dx && (radius + lineWidth) * 2 > dy) {
+	            selected = true;
+
+	            canvas.onmousemove = function (e) {
+	              mx = e.clientX - rect.left;
+	              my = e.clientY - rect.top;
+	              if (selected) {
+	                prevPos.x = currPos.x;
+	                prevPos.y = currPos.y;
+
+	                currPos.x = mx;
+	                currPos.y = my;
+	              }
+	            };
+
+	            canvas.onmouseup = function (e) {
+	              mx = e.clientX - rect.left;
+	              my = e.clientY - rect.top;
+
+	              prevPos.x = currPos.x;
+	              prevPos.y = currPos.y;
+
+	              currPos.x = mx;
+	              currPos.y = my;
+
+	              selected = false;
+	            };
+	          }
+	        });
+	      };
+
+	      window.addEventListener('keydown', function (_ref2) {
+	        var key = _ref2.key;
+	        var _testSet2 = _this2.testSet;
+	        var gravity = _testSet2.gravity;
+	        var body = _testSet2.body;
+	        var points = body.points;
+
+
+	        points.forEach(function (_ref3) {
+	          var prevPos = _ref3.prevPos;
+	          var currPos = _ref3.currPos;
+
+	          if (key == 'a') {
+	            prevPos.x = currPos.x + 10;
+	          } else if (key == 'd') {
+	            prevPos.x = currPos.x - 10;
+	          } else if (key == 's') {
+	            prevPos.y = currPos.y - 10;
+	          } else if (key == 'w') {
+	            prevPos.y = currPos.y + 10;
+	          }
+	        });
+
+	        if (key == 'v') {
+	          for (var i = 10; i < 30; i++) {
+	            for (var j = 0; j < 10; j++) {
+	              points[26 * i + j].prevPos.x = points[26 * i + j].currPos.x + 10;
+	              points[26 * i + j].prevPos.y = points[26 * i + j].currPos.y + 10;
+	            }
+	          }
+	        }
+	      });
 
 	      setTimeout(function () {
 	        requestAnimationFrame(function (time) {
@@ -21469,15 +21567,143 @@
 	      }, 2000);
 	    }
 	  }, {
+	    key: 'genStarMeta',
+	    value: function genStarMeta() {
+	      var _this3 = this;
+
+	      var pointsMeta = [[0, 0], [0, 100], [100, 100], [100, 0], [-25 + 50, 50], [50, -25 + 50], [25 + 50, 50], [50, 25 + 50]];
+
+	      var points = pointsMeta.map(function (p, i) {
+	        return {
+	          prevPos: {
+	            x: p[0],
+	            y: p[1]
+	          },
+	          currPos: {
+	            x: p[0],
+	            y: p[1]
+	          },
+	          radius: 4,
+	          lineWidth: 2
+	        };
+	      });
+
+	      var constraints = points.reduce(function (res, p, i, points) {
+	        var baseIdx = i;
+	        i++;
+	        for (i; i < points.length; i++) {
+	          if (baseIdx == 0 && i == 1) continue;
+	          if (baseIdx == 0 && i == 3) continue;
+	          if (baseIdx == 1 && i == 2) continue;
+	          if (baseIdx == 2 && i == 3) continue;
+
+	          res.push({
+	            len: _this3.distance(points[baseIdx].currPos, points[i].currPos),
+	            link: [baseIdx, i]
+	          });
+	        }
+
+	        return res;
+	      }, []);
+
+	      return {
+	        points: points,
+	        constraints: constraints
+	      };
+	    }
+	  }, {
+	    key: 'distance',
+	    value: function distance(p1, p2) {
+	      return Math.sqrt((p1.x - p2.x) * (p1.x - p2.x) + (p1.y - p2.y) * (p1.y - p2.y));
+	    }
+	  }, {
+	    key: 'genClothMeta',
+	    value: function genClothMeta() {
+	      var _this4 = this;
+
+	      var canvas = this.refs.canvas;
+
+	      var rCnt = 26;
+	      var cCnt = 40;
+	      var edgeLen = 30;
+	      var initPos = { x: (canvas.width - cCnt * edgeLen) / 2, y: 10 };
+
+	      var pointsMeta = [];
+
+	      Array.from(new Array(rCnt * cCnt)).forEach(function (t, i) {
+	        var p = [];
+	        var c = i % cCnt;
+	        var r = Math.floor(i / cCnt);
+
+	        p[0] = initPos.x + c * edgeLen;
+	        p[1] = initPos.y + r * edgeLen;
+	        p[2] = r == 0; //pin
+
+	        pointsMeta.push(p);
+	      });
+
+	      var points = pointsMeta.map(function (p, i) {
+	        return {
+	          prevPos: {
+	            x: p[0],
+	            y: p[1]
+	          },
+	          currPos: {
+	            x: p[0],
+	            y: p[1]
+	          },
+	          radius: 0.1,
+	          lineWidth: 0.2,
+	          pin: p[2]
+	        };
+	      });
+
+	      var constraints = points.reduce(function (res, p, i, points) {
+	        var c = i % cCnt;
+	        var r = Math.floor(i / cCnt);
+
+	        if (c < cCnt - 1) {
+	          var cp = points[i];
+	          var rp = points[i + 1];
+	          res.push({
+	            len: _this4.distance(cp.currPos, rp.currPos),
+	            link: [i, i + 1],
+	            elasticity: 0.5
+	          });
+	        }
+
+	        if (r < rCnt - 1) {
+	          var _cp = points[i];
+	          var _rp = points[i + cCnt];
+	          res.push({
+	            len: _this4.distance(_cp.currPos, _rp.currPos),
+	            link: [i, i + cCnt],
+	            elasticity: 0.5
+	          });
+	        }
+
+	        return res;
+	      }, []);
+
+	      return {
+	        points: points,
+	        constraints: constraints
+	      };
+	    }
+	  }, {
 	    key: 'update',
 	    value: function update(dt) {
-	      var _testSet = this.testSet;
-	      var pos = _testSet.pos;
-	      var oldPos = _testSet.oldPos;
-	      var wind = _testSet.wind;
-	      var vel = _testSet.vel;
-	      var acc = _testSet.acc;
-	      var ball = _testSet.ball;
+	      var _this5 = this;
+
+	      var _testSet3 = this.testSet;
+	      var pos = _testSet3.pos;
+	      var oldPos = _testSet3.oldPos;
+	      var wind = _testSet3.wind;
+	      var vel = _testSet3.vel;
+	      var gravity = _testSet3.gravity;
+	      var body = _testSet3.body;
+	      var points = body.points;
+	      var constraints = body.constraints;
 	      var canvas = this.refs.canvas;
 	      var width = canvas.width;
 	      var height = canvas.height;
@@ -21486,54 +21712,96 @@
 
 
 	      dt /= 100;
+	      var friction = 0.99;
+	      points.forEach(function (point) {
+	        var prevPos = point.prevPos;
+	        var currPos = point.currPos;
+	        var radius = point.radius;
+	        var lineWidth = point.lineWidth;
+	        var pin = point.pin;
 
-	      var newPos = [];
-	      newPos[0] = 2 * pos[0] - oldPos[0] + acc[0] * dt * dt;
-	      newPos[1] = 2 * pos[1] - oldPos[1] + acc[1] * dt * dt;
+	        if (pin) {
+	          return;
+	        }
 
-	      //check bound
-	      var ballRadius = ball.radius + ball.lineWidth;
-	      var bounds = {
-	        left: clientLeft + ballRadius,
-	        right: clientLeft + width - ballRadius,
-	        top: clientTop + ballRadius,
-	        bottom: clientTop + height - ballRadius
-	      };
+	        var nx = currPos.x + (currPos.x - prevPos.x) * friction + gravity.x * dt * dt;
+	        var ny = currPos.y + (currPos.y - prevPos.y) * friction + gravity.y * dt * dt;
 
-	      var xPosGap = newPos[0] - pos[0];
-	      var yPosGap = newPos[1] - pos[1];
+	        //check bound
+	        var ballRadius = radius + lineWidth;
+	        var bounds = {
+	          left: clientLeft + ballRadius,
+	          right: clientLeft + width - ballRadius,
+	          top: clientTop,
+	          bottom: clientTop + height - ballRadius
+	        };
 
-	      if (Math.abs(yPosGap) < 1. && Math.abs(newPos[1] - bounds.bottom) < 2.) {
-	        pos[1] = oldPos[1] = bounds.bottom;
-	      } else if (newPos[1] >= bounds.bottom) {
-	        pos[1] = bounds.bottom - (newPos[1] - bounds.bottom) * 0.7;
-	        oldPos[1] = pos[1] + yPosGap * 0.7;
-	      } else {
-	        oldPos[1] = pos[1];
-	        pos[1] = newPos[1];
-	      }
+	        if (nx >= bounds.right) {
+	          var dx = nx - currPos.x;
+	          currPos.x = bounds.right;
+	          prevPos.x = currPos.x + dx * 0.7;
+	        } else if (nx <= bounds.left) {
+	          var _dx = nx - currPos.x;
+	          currPos.x = bounds.left;
+	          prevPos.x = currPos.x + _dx * 0.7;
+	        } else {
+	          prevPos.x = currPos.x;
+	          currPos.x = nx;
+	        }
 
-	      if (newPos[0] >= bounds.right) {
-	        pos[0] = bounds.right - (newPos[0] - bounds.right) * 0.7;
-	        oldPos[0] = pos[0] + xPosGap * 0.7;
-	      } else if (newPos[0] <= bounds.left) {
-	        pos[0] = bounds.left - (newPos[0] - bounds.left) * 0.7;
-	        oldPos[0] = pos[0] + xPosGap * 0.7;
-	      } else {
-	        oldPos[0] = pos[0];
-	        pos[0] = newPos[0];
+	        if (ny >= bounds.bottom) {
+	          var dy = ny - currPos.y;
+	          currPos.y = bounds.bottom;
+	          prevPos.y = currPos.y + dy * 0.7;
+	        } else {
+	          prevPos.y = currPos.y;
+	          currPos.y = ny;
+	        }
+	      });
+
+	      //constraints
+	      for (var i = 0; i < 10; i++) {
+	        constraints.forEach(function (_ref4) {
+	          var link = _ref4.link;
+	          var len = _ref4.len;
+	          var elasticity = _ref4.elasticity;
+
+	          var p1 = points[link[0]].currPos;
+	          var p2 = points[link[1]].currPos;
+
+	          var dp = {
+	            x: p1.x - p2.x,
+	            y: p1.y - p2.y
+	          };
+
+	          var deltaLen = _this5.distance(p1, p2);
+
+	          var diff = (len - deltaLen) / deltaLen;
+
+	          if (points[link[0]].pin) {
+	            p2.x -= dp.x * diff;
+	            p2.y -= dp.y * diff;
+	          } else {
+	            p1.x += dp.x * elasticity * diff;
+	            p1.y += dp.y * elasticity * diff;
+
+	            p2.x -= dp.x * elasticity * diff;
+	            p2.y -= dp.y * elasticity * diff;
+	          }
+	        });
 	      }
 	    }
 	  }, {
 	    key: 'renderToCanvas',
 	    value: function renderToCanvas(time) {
-	      var _this3 = this;
+	      var _this6 = this;
 
 	      var ctx = this.ctx;
 	      var canvas = this.canvas;
 	      var testSet = this.testSet;
-	      var pos = testSet.pos;
-	      var ball = testSet.ball;
+	      var _testSet$body = testSet.body;
+	      var points = _testSet$body.points;
+	      var constraints = _testSet$body.constraints;
 
 
 	      if (testSet.pt == -1) {
@@ -21542,18 +21810,38 @@
 
 	      this.update(time - testSet.pt);
 	      ctx.clearRect(0, 0, canvas.width, canvas.height);
-	      ctx.beginPath();
-	      ctx.arc(pos[0], pos[1], ball.radius, 0, 2 * Math.PI, false);
-	      ctx.fillStyle = 'green';
-	      ctx.fill();
-	      ctx.lineWidth = ball.lineWidth;
-	      ctx.strokeStyle = '#003300';
-	      ctx.stroke();
+
+	      constraints.forEach(function (_ref5) {
+	        var link = _ref5.link;
+
+	        var fromIdx = link[0];
+	        var toIdx = link[1];
+	        ctx.beginPath();
+	        ctx.moveTo(points[fromIdx].currPos.x, points[fromIdx].currPos.y);
+	        ctx.lineTo(points[toIdx].currPos.x, points[toIdx].currPos.y);
+	        ctx.lineWidth = 1;
+	        ctx.strokeStyle = '#000';
+	        ctx.stroke();
+	      });
+
+	      points.forEach(function (_ref6) {
+	        var currPos = _ref6.currPos;
+	        var radius = _ref6.radius;
+	        var lineWidth = _ref6.lineWidth;
+
+	        ctx.beginPath();
+	        ctx.arc(currPos.x, currPos.y, radius, 0, 2 * Math.PI, false);
+	        ctx.fillStyle = 'green';
+	        ctx.fill();
+	        ctx.lineWidth = lineWidth;
+	        ctx.strokeStyle = '#003300';
+	        ctx.stroke();
+	      });
 
 	      testSet.pt = time;
 
 	      requestAnimationFrame(function (t) {
-	        return _this3.renderToCanvas(t);
+	        return _this6.renderToCanvas(t);
 	      });
 	    }
 	  }, {
@@ -21568,10 +21856,10 @@
 	    }
 	  }]);
 
-	  return FreeFallEulerMethod;
+	  return ClothSimulationVerletIntergration;
 	}(_react.Component);
 
-	exports.default = FreeFallEulerMethod;
+	exports.default = ClothSimulationVerletIntergration;
 
 /***/ }
 /******/ ]);

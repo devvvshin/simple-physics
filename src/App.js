@@ -1,12 +1,12 @@
 import React, { Component } from 'react';
-import FreeFallEulerMethod from './FreeFallEulerMethod';
+import ClothSimulationVerletIntergration from './ClothSimulationVerletIntergration';
 
 class App extends Component {
 
   render() {
     return (
      <div>
-      <FreeFallEulerMethod />
+      <ClothSimulationVerletIntergration />
      </div>
     );
   }
